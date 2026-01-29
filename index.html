@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tvättcykel-hanterare</title>
+  <link rel="stylesheet" href="src/styles.css" />
+
+  <!-- Supabase JS SDK (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">🧺</div>
+      <div>
+        <div class="title">Tvättcykel-hanterare</div>
+        <div class="subtitle">GitHub Pages + Supabase</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label for="signature">Min signatur</label>
+        <select id="signature"></select>
+      </div>
+
+      <button class="btn primary" id="doNext">Klar – gör föreslagen tvätt</button>
+      <button class="btn" id="refresh">Uppdatera</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="banner" id="instruction">
+      Välj din signatur så får du instruktioner för nästa tvätt.
+    </section>
+
+    <section class="grid" id="grid"></section>
+
+    <section class="footerNote">
+      <span class="dot live"></span> Realtid aktiv (Supabase Realtime)
+    </section>
+  </main>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
