@@ -1,6 +1,6 @@
 // Fyll i dina värden från Supabase: Settings → API
-export const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-export const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
+export const SUPABASE_URL = "https://jqstbegfwerztttsmgqy.supabase.co";
+export const SUPABASE_ANON_KEY = "sb_publishable_oLbCALZI-QlTx-BAMl0BNw_PCYt6Xc9";
 
 // Supabase SDK laddas via CDN i index.html (window.supabase)
 export function createSupabaseClient() {
