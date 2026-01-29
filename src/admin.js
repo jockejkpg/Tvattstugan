@@ -1,3 +1,4 @@
+import { registerServiceWorker } from "./pwa.js";
 import { createSupabaseClient } from "./supabaseClient.js";
 const supabase = createSupabaseClient();
 
@@ -16,7 +17,7 @@ const peopleList = document.getElementById("peopleList");
 const logList = document.getElementById("logList");
 
 function fmt(s){ try{ return new Date(s).toLocaleString("sv-SE"); }catch{ return "—"; } }
-function stepName(step){ return step === 5 ? "IMPREGNERING" : "VANLIGT TVÄTPROGRAM"; }
+function stepName(step){ return step === 5 ? "IMPREGNERING" : "VANLIGT TVÄTTPROGRAM"; }
 
 async function fetchUsers(){
   const { data, error } = await supabase.from("users").select("code,name,created_at").order("code");
@@ -53,7 +54,9 @@ function renderUsers(users){
   usersList.querySelectorAll("button[data-del]").forEach(btn => {
     btn.addEventListener("click", async () => {
       await supabase.from("users").delete().eq("code", btn.getAttribute("data-del"));
-      await reload();
+      registerServiceWorker();
+
+await reload();
     });
   });
 }
@@ -83,7 +86,9 @@ function renderPeople(people){
       const cur = data?.next_step ?? 1;
       const prev = cur === 1 ? 5 : cur - 1;
       await supabase.from("people").update({ next_step: prev, updated_at: new Date().toISOString() }).eq("id", id);
-      await reload();
+      registerServiceWorker();
+
+await reload();
     });
   });
 
@@ -94,14 +99,18 @@ function renderPeople(people){
       const cur = data?.next_step ?? 1;
       const next = cur === 5 ? 1 : cur + 1;
       await supabase.from("people").update({ next_step: next, updated_at: new Date().toISOString() }).eq("id", id);
-      await reload();
+      registerServiceWorker();
+
+await reload();
     });
   });
 
   peopleList.querySelectorAll("button[data-del]").forEach(btn => {
     btn.addEventListener("click", async () => {
       await supabase.from("people").delete().eq("id", btn.getAttribute("data-del"));
-      await reload();
+      registerServiceWorker();
+
+await reload();
     });
   });
 }
@@ -127,7 +136,9 @@ userForm.addEventListener("submit", async (e) => {
   if (!code) return;
   await supabase.from("users").insert({ code, name: name || null });
   uCode.value = ""; uName.value = "";
-  await reload();
+  registerServiceWorker();
+
+await reload();
 });
 
 peopleForm.addEventListener("submit", async (e) => {
@@ -137,7 +148,9 @@ peopleForm.addEventListener("submit", async (e) => {
   if (!id) return;
   await supabase.from("people").insert({ id, next_step: step, updated_at: new Date().toISOString() });
   pId.value = ""; pStep.value = "1";
-  await reload();
+  registerServiceWorker();
+
+await reload();
 });
 
 async function reload(){
@@ -149,5 +162,7 @@ async function reload(){
     logList.innerHTML = "<div class='item'><div class='left'>FEL VID LADDNING. KONTROLLERA TABELLER/POLICIES.</div></div>";
   }
 }
+
+registerServiceWorker();
 
 await reload();

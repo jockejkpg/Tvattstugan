@@ -1,12 +1,13 @@
+import { registerServiceWorker } from "./pwa.js";
 import { createSupabaseClient } from "./supabaseClient.js";
 const supabase = createSupabaseClient();
 
 // Cykel: 1–4 VANLIGT, 5 IMPREGNERING
 const STEPS = [
-  { key: 1, label: "VANLIGT TVÄTPROGRAM" },
-  { key: 2, label: "VANLIGT TVÄTPROGRAM" },
-  { key: 3, label: "VANLIGT TVÄTPROGRAM" },
-  { key: 4, label: "VANLIGT TVÄTPROGRAM" },
+  { key: 1, label: "VANLIGT TVÄTTPROGRAM" },
+  { key: 2, label: "VANLIGT TVÄTTPROGRAM" },
+  { key: 3, label: "VANLIGT TVÄTTPROGRAM" },
+  { key: 4, label: "VANLIGT TVÄTTPROGRAM" },
   { key: 5, label: "IMPREGNERING" },
 ];
 
@@ -176,7 +177,11 @@ washBtn.addEventListener("click", async () => {
     console.error(e);
     instructionEl.textContent = "KUNDE INTE LOGGA TVÄTT. KONTROLLERA POLICIES/ANSLUTNING.";
   }
-  await reload();
+  registerServiceWorker();
+
+await reload();
 });
+
+registerServiceWorker();
 
 await reload();
