@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tvättcykel Admin</title>
+  <link rel="stylesheet" href="src/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="pinMount"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">🛠️</div>
+      <div>
+        <div class="title">Admin</div>
+        <div class="subtitle">Superadmin</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <a class="btn" href="index.html">Tillbaka</a>
+      <button class="btn" id="hardRefresh">Ladda om</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="banner">
+      Adminpanelen låter dig administrera <span class="mono">users</span>, <span class="mono">people</span> och se senaste loggar.
+    </section>
+
+    <div class="adminGrid">
+      <section class="card">
+        <div class="sectionTitle">Users (signaturer)</div>
+
+        <form id="userForm" class="form">
+          <div class="field">
+            <label>Code (t.ex. JE)</label>
+            <input id="uCode" maxlength="10" placeholder="JE" />
+          </div>
+          <div class="field">
+            <label>Namn (valfritt)</label>
+            <input id="uName" maxlength="50" placeholder="Johan Exempel" />
+          </div>
+          <button class="btn primary" type="submit">Lägg till</button>
+        </form>
+
+        <div id="usersList" class="list"></div>
+      </section>
+
+      <section class="card">
+        <div class="sectionTitle">People (kort)</div>
+
+        <form id="peopleForm" class="form">
+          <div class="field">
+            <label>ID (t.ex. 25)</label>
+            <input id="pId" maxlength="10" placeholder="25" />
+          </div>
+          <div class="field">
+            <label>Startsteg (1–5)</label>
+            <input id="pStep" type="number" min="1" max="5" value="1" />
+          </div>
+          <button class="btn primary" type="submit">Lägg till</button>
+        </form>
+
+        <div id="peopleList" class="list"></div>
+      </section>
+
+      <section class="card">
+        <div class="sectionTitle">Senaste tvättloggar</div>
+        <div id="logList" class="list"></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { mountPinGate } from "./src/pinGate.js";
+    mountPinGate({
+      mountId: "pinMount",
+      pin: "8300",
+      title: "Admin PIN",
+      hint: "Ange admin-PIN för att öppna adminpanelen."
+    });
+  </script>
+
+  <script type="module" src="src/admin.js"></script>
+</body>
+</html>

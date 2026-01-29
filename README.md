@@ -1,51 +1,44 @@
-# Tvättcykel-hanterare (GitHub Pages + Supabase)
+# Tvättcykel-hanterare v2 (GitHub Pages + Supabase)
 
-En liten statisk webbapp (HTML/CSS/JS) som visar personer (t.ex. 25, 27, JE, MO) med 6 steg:
-- Steg 1–5: Normal tvätt
-- Steg 6: Impregnering
+Nyheter i v2
+- PIN-lås på brandkårssidan (kod **8310**)
+- PIN-lås på admin-sidan (kod **8300**)
+- Tvättcykel: **4x VANLIGT TVÄTPROGRAM** + **1x IMPREGNERING** (steg 1–5)
+- Renare, kontrastrikt “kubistiskt” UI med pilmarkering av aktuell rad
+- `users`-tabell för skalbar signaturlista (ca 30 pers)
 
-Appen:
-- Laddar aktuell status från Supabase-tabellen `people`
-- Loggar varje “Klar” i `wash_log`
-- Uppdaterar `next_step` (6 -> 1)
-- Realtidsuppdaterar UI via Supabase Realtime (Postgres Changes)
+> Viktigt: PIN i frontend är en **UI-spärr**, inte ett fullständigt säkerhetsskydd för databasen.
+> För riktig åtkomstkontroll behöver ni Supabase Auth + RLS eller Edge Function för admin.
 
-## 1) Skapa tabeller i Supabase
+## 1) Supabase: skapa/uppdatera tabeller
+Kör `supabase/db.sql` i Supabase SQL Editor.
 
-Kör filen `supabase/db.sql` i Supabase SQL Editor.
-
-## 2) Aktivera Realtime
-I Supabase: Database → Replication → slå på för tabellerna `people` och `wash_log` (om inte redan aktiverat).
-
-## 3) Lägg in dina Supabase-nycklar
+## 2) Lägg in Supabase URL + anon/publishable key
 Öppna `src/supabaseClient.js` och fyll i:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 
-Finns i Supabase: Settings → API.
+Finns i Supabase → Settings → API.
 
-## 4) Kör lokalt
-Du kan köra med valfri statisk server, t.ex.:
-
+## 3) Kör lokalt
 ```bash
 python -m http.server 5173
 ```
+Öppna http://localhost:5173
 
-Öppna: http://localhost:5173
+## 4) Admin
+Öppna `/admin.html` och ange admin-PIN.
 
 ## 5) Deploy på GitHub Pages
-- Lägg allt i repo
-- Settings → Pages → Deploy from branch → root
-
-## Säkerhet (MVP)
-`db.sql` sätter RLS policies “allow all” (alla får läsa/skriva). För intern station-MVP kan det vara OK.
-När ni vill låsa ned: inför auth och policies per station/användare.
+Lägg repo i GitHub och aktivera Pages från branch.
 
 ---
 
-### Filstruktur
-- `index.html` – startsida
-- `src/app.js` – UI + logik
-- `src/supabaseClient.js` – Supabase client
-- `src/styles.css` – styling
-- `supabase/db.sql` – schema + policies + startdata
+### Filer
+- `index.html` – brandkårssida (PIN 8310)
+- `admin.html` – adminpanel (PIN 8300)
+- `src/app.js` – huvudapp
+- `src/admin.js` – adminpanel
+- `src/pinGate.js` – gemensam PIN-gate
+- `src/styles.css` – tema
+- `supabase/db.sql` – schema + startdata

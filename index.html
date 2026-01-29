@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tvättcykel-hanterare</title>
   <link rel="stylesheet" href="src/styles.css" />
-
-  <!-- Supabase JS SDK (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+  <div id="pinMount"></div>
+
   <header class="topbar">
     <div class="brand">
       <div class="logo">🧺</div>
       <div>
         <div class="title">Tvättcykel-hanterare</div>
-        <div class="subtitle">GitHub Pages + Supabase</div>
+        <div class="subtitle">Station</div>
       </div>
     </div>
 
@@ -25,8 +25,9 @@
         <select id="signature"></select>
       </div>
 
-      <button class="btn primary" id="doNext">Klar – gör föreslagen tvätt</button>
+      <button class="btn primary" id="doNext">Klar</button>
       <button class="btn" id="refresh">Uppdatera</button>
+      <a class="btn" href="admin.html">Admin</a>
     </div>
   </header>
 
@@ -38,9 +39,19 @@
     <section class="grid" id="grid"></section>
 
     <section class="footerNote">
-      <span class="dot live"></span> Realtid aktiv (Supabase Realtime)
+      <span class="dot"></span> Tips: Lägg appen på hemskärmen för snabb åtkomst.
     </section>
   </main>
+
+  <script type="module">
+    import { mountPinGate } from "./src/pinGate.js";
+    mountPinGate({
+      mountId: "pinMount",
+      pin: "8310",
+      title: "Station PIN",
+      hint: "Ange PIN för att öppna tvättcykel-hanteraren."
+    });
+  </script>
 
   <script type="module" src="src/app.js"></script>
 </body>
