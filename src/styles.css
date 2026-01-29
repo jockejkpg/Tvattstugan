@@ -99,3 +99,7 @@ input{ width:100%; }
 .item .sub{ font-size:12px; color:var(--muted); font-weight:800; }
 .item .actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .btn.small{ padding:8px 10px; font-size:13px; }
+
+
+.redText{ color: var(--red); font-weight:900; }
+.card.selected{ outline:6px solid var(--red); }

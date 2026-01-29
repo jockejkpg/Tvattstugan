@@ -1,6 +1,7 @@
 import { createSupabaseClient } from "./supabaseClient.js";
 const supabase = createSupabaseClient();
 
+// Cykel: 1–4 VANLIGT, 5 IMPREGNERING
 const STEPS = [
   { key: 1, label: "VANLIGT TVÄTPROGRAM" },
   { key: 2, label: "VANLIGT TVÄTPROGRAM" },
@@ -9,21 +10,16 @@ const STEPS = [
   { key: 5, label: "IMPREGNERING" },
 ];
 
-const sigEl = document.getElementById("signature");
+const selEl = document.getElementById("signature"); // dropdown = vilket tvättkort som påverkas
 const gridEl = document.getElementById("grid");
 const instructionEl = document.getElementById("instruction");
 const refreshBtn = document.getElementById("refresh");
-const doNextBtn = document.getElementById("doNext");
-const LS_SIG = "tvatt_sig_v2";
+const washBtn = document.getElementById("doNext");
 
-let users = [];
+const LS_SELECTED = "tvatt_selected_person_v3";
+
 let people = [];
-
-async function fetchUsers() {
-  const { data, error } = await supabase.from("users").select("code,name").order("code");
-  if (error) throw error;
-  users = data ?? [];
-}
+let lastLogByPerson = new Map(); // person_id -> {done_at, done_by, step}
 
 async function fetchPeople() {
   const { data, error } = await supabase.from("people").select("id,next_step,updated_at").order("id");
@@ -31,73 +27,123 @@ async function fetchPeople() {
   people = data ?? [];
 }
 
-function renderSignatureSelect() {
-  sigEl.innerHTML = "";
-  users.forEach(u => {
-    const opt = document.createElement("option");
-    opt.value = u.code;
-    opt.textContent = u.name ? `${u.code} (${u.name})` : u.code;
-    sigEl.appendChild(opt);
-  });
-  const saved = localStorage.getItem(LS_SIG);
-  if (saved && users.some(u => u.code === saved)) sigEl.value = saved;
-  if (!sigEl.value && users.length) sigEl.value = users[0].code;
+async function fetchLastLogs() {
+  // Hämta senaste log per person (MVP: hämta senaste 500 totalt och plocka första per person)
+  const { data, error } = await supabase
+    .from("wash_log")
+    .select("person_id,step,done_by,done_at")
+    .order("done_at", { ascending: false })
+    .limit(500);
+
+  if (error) throw error;
+
+  lastLogByPerson = new Map();
+  for (const row of (data ?? [])) {
+    if (!lastLogByPerson.has(row.person_id)) lastLogByPerson.set(row.person_id, row);
+  }
 }
 
-function getNextJobForSignature(sigCode) {
-  // Enkel station-kö: ta kortet som är mest "due"
-  const items = [...people].map(p => ({ p, t: p.updated_at ? Date.parse(p.updated_at) : 0 }));
-  items.sort((a,b) => (a.p.next_step - b.p.next_step) || (a.t - b.t));
-  const pick = items[0]?.p;
-  if (!pick) return null;
-  const step = STEPS.find(s => s.key === pick.next_step);
-  return { personId: pick.id, label: pick.id, stepKey: step.key, stepName: step.label, doneBy: sigCode };
+function stepLabel(stepKey) {
+  return (STEPS.find(s => s.key === stepKey)?.label) ?? "—";
+}
+
+function renderSelect() {
+  selEl.innerHTML = "";
+  people.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.id;
+    selEl.appendChild(opt);
+  });
+
+  const saved = localStorage.getItem(LS_SELECTED);
+  if (saved && people.some(p => p.id === saved)) selEl.value = saved;
+  if (!selEl.value && people.length) selEl.value = people[0].id;
 }
 
 function renderInstruction() {
-  const sig = sigEl.value;
-  if (!sig) { instructionEl.textContent = "Välj din signatur så får du instruktioner."; return; }
-  const job = getNextJobForSignature(sig);
-  if (!job) { instructionEl.textContent = "Inga kort hittades i databasen."; return; }
-  instructionEl.innerHTML = `<div><strong>NÄSTA:</strong> <span class="mono">${job.label}</span> – ${job.stepName}</div>
-  <div style="margin-top:6px;">TRYCK <strong>KLAR</strong> NÄR DU HAR KÖRT DETTA.</div>`;
+  const personId = selEl.value;
+  const person = people.find(p => p.id === personId);
+
+  if (!person) {
+    instructionEl.textContent = "Välj ett tvättkort i listan.";
+    return;
+  }
+
+  instructionEl.innerHTML = `
+    <div><strong>VALT TVÄTTKORT:</strong> <span class="mono">${person.id}</span></div>
+    <div style="margin-top:6px;"><strong>PROGRAM:</strong> ${stepLabel(person.next_step)}</div>
+    <div class="redText" style="margin-top:8px;">
+      KÖR PROGRAM ENLIGT INRINGAT FÄLT. TRYCK SEN PÅ TVÄTTA-KNAPPEN.
+    </div>
+  `;
+}
+
+function fmtDate(s) {
+  try { return new Date(s).toLocaleString("sv-SE"); } catch { return "—"; }
 }
 
 function renderGrid() {
+  const selectedId = selEl.value;
   gridEl.innerHTML = "";
+
   people.forEach(person => {
     const card = document.createElement("div");
-    card.className = "card";
-    const currentLabel = STEPS.find(s => s.key === person.next_step)?.label ?? "—";
+    card.className = "card" + (person.id === selectedId ? " selected" : "");
+
+    const last = lastLogByPerson.get(person.id);
+    const lastText = last ? fmtDate(last.done_at) : "ALDRIG";
+
     card.innerHTML = `
       <div class="cardTitle">${person.id}</div>
-      <div class="cardAdvice">${currentLabel}</div>
+      <div class="cardAdvice">SENAST TVÄTTAT: <span class="mono">${lastText}</span></div>
       <div class="metaLine">AKTUELLT STEG: <span class="mono">${person.next_step}</span> / 5</div>
     `;
+
     const stack = document.createElement("div");
     stack.className = "stack";
+
     STEPS.forEach(step => {
+      const isActive = step.key === person.next_step;
       const row = document.createElement("div");
-      row.className = "row" + (step.key === person.next_step ? " active" : "");
-      row.innerHTML = `<div class="arrow">${step.key === person.next_step ? "➤" : ""}</div>
-                       <div class="rowText">${step.label}</div>`;
+      row.className = "row" + (isActive ? " active" : "");
+      row.innerHTML = `
+        <div class="arrow">${isActive ? "➤" : ""}</div>
+        <div class="rowText">${step.label}</div>
+      `;
       stack.appendChild(row);
     });
+
+    // Klick på kortet = välj det (snabbt på platta)
+    card.addEventListener("click", () => {
+      selEl.value = person.id;
+      localStorage.setItem(LS_SELECTED, person.id);
+      renderInstruction();
+      renderGrid();
+    });
+
     card.appendChild(stack);
     gridEl.appendChild(card);
   });
 }
 
-async function completeForPerson(personId, signature) {
-  const { data: person, error: pErr } = await supabase.from("people").select("id,next_step").eq("id", personId).single();
-  if (pErr) throw pErr;
+async function washSelected() {
+  const personId = selEl.value;
+  const person = people.find(p => p.id === personId);
+  if (!person) return;
+
   const step = person.next_step;
   const next = step === 5 ? 1 : step + 1;
 
-  const { error: lErr } = await supabase.from("wash_log").insert({ person_id: personId, step, done_by: signature });
+  const { error: lErr } = await supabase.from("wash_log").insert({
+    person_id: personId,
+    step,
+    done_by: personId
+  });
   if (lErr) throw lErr;
 
-  const { error: uErr } = await supabase.from("people")
+  const { error: uErr } = await supabase
+    .from("people")
     .update({ next_step: next, updated_at: new Date().toISOString() })
     .eq("id", personId);
   if (uErr) throw uErr;
@@ -105,8 +151,8 @@ async function completeForPerson(personId, signature) {
 
 async function reload() {
   try {
-    await Promise.all([fetchUsers(), fetchPeople()]);
-    renderSignatureSelect();
+    await Promise.all([fetchPeople(), fetchLastLogs()]);
+    renderSelect();
     renderInstruction();
     renderGrid();
   } catch (e) {
@@ -115,20 +161,17 @@ async function reload() {
   }
 }
 
-sigEl.addEventListener("change", () => {
-  localStorage.setItem(LS_SIG, sigEl.value);
+selEl.addEventListener("change", () => {
+  localStorage.setItem(LS_SELECTED, selEl.value);
   renderInstruction();
+  renderGrid();
 });
+
 refreshBtn.addEventListener("click", reload);
 
-doNextBtn.addEventListener("click", async () => {
-  const sig = sigEl.value;
-  if (!sig) return;
-  const job = getNextJobForSignature(sig);
-  if (!job) return;
+washBtn.addEventListener("click", async () => {
   try {
-    await completeForPerson(job.personId, sig);
-    instructionEl.innerHTML = `<strong>KLART!</strong> LOGGADE <span class="mono">${job.label}</span> – ${job.stepName}`;
+    await washSelected();
   } catch (e) {
     console.error(e);
     instructionEl.textContent = "KUNDE INTE LOGGA TVÄTT. KONTROLLERA POLICIES/ANSLUTNING.";

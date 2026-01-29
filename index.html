@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Tvättcykel-hanterare</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icon-firefighter.svg" />
   <link rel="stylesheet" href="src/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -12,7 +13,7 @@
 
   <header class="topbar">
     <div class="brand">
-      <div class="logo">🧺</div>
+      <div class="logo"><img src="assets/icon-firefighter.svg" alt="Ikon" width="28" height="28" /></div>
       <div>
         <div class="title">Tvättcykel-hanterare</div>
         <div class="subtitle">Station</div>
@@ -21,11 +22,11 @@
 
     <div class="controls">
       <div class="control">
-        <label for="signature">Min signatur</label>
+        <label for="signature">Välj tvättkort</label>
         <select id="signature"></select>
       </div>
 
-      <button class="btn primary" id="doNext">Klar</button>
+      <button class="btn primary" id="doNext">TVÄTTA</button>
       <button class="btn" id="refresh">Uppdatera</button>
       <a class="btn" href="admin.html">Admin</a>
     </div>

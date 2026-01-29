@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Helmet -->
+    <path d="M64 96c0-35 128-35 128 0" />
+    <path d="M80 96h96" />
+    <path d="M88 72c16-24 64-24 80 0" />
+    <!-- Head -->
+    <circle cx="128" cy="116" r="18"/>
+    <!-- Body -->
+    <line x1="128" y1="134" x2="128" y2="190"/>
+    <!-- Arms -->
+    <line x1="128" y1="150" x2="88" y2="168"/>
+    <line x1="128" y1="150" x2="168" y2="168"/>
+    <!-- Legs -->
+    <line x1="128" y1="190" x2="104" y2="230"/>
+    <line x1="128" y1="190" x2="152" y2="230"/>
+    <!-- Axe -->
+    <line x1="176" y1="144" x2="220" y2="100"/>
+    <path d="M214 94l18-6-6 18z"/>
+  </g>
+</svg>

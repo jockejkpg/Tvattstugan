@@ -1,11 +1,11 @@
-# Tvättcykel-hanterare v2 (GitHub Pages + Supabase)
+# Tvättcykel-hanterare v4 (GitHub Pages + Supabase)
 
 Nyheter i v2
 - PIN-lås på brandkårssidan (kod **8310**)
 - PIN-lås på admin-sidan (kod **8300**)
 - Tvättcykel: **4x VANLIGT TVÄTPROGRAM** + **1x IMPREGNERING** (steg 1–5)
 - Renare, kontrastrikt “kubistiskt” UI med pilmarkering av aktuell rad
-- `users`-tabell för skalbar signaturlista (ca 30 pers)
+- Dropdownen på stationssidan visar alla benämningar (people.id). `users` finns kvar för framtida bruk.
 
 > Viktigt: PIN i frontend är en **UI-spärr**, inte ett fullständigt säkerhetsskydd för databasen.
 > För riktig åtkomstkontroll behöver ni Supabase Auth + RLS eller Edge Function för admin.
@@ -42,3 +42,8 @@ Lägg repo i GitHub och aktivera Pages från branch.
 - `src/pinGate.js` – gemensam PIN-gate
 - `src/styles.css` – tema
 - `supabase/db.sql` – schema + startdata
+
+
+## v4
+- Ny projektikon: stiliserad brandman (svart clipart/SVG)
+- Ikonen används som favicon och i övre vänstra hörnet
