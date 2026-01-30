@@ -18,8 +18,12 @@ const gridEl = document.getElementById("grid");
 const instructionEl = document.getElementById("instruction");
 const refreshBtn = document.getElementById("refresh");
 const washBtn = document.getElementById("doNext");
+const viewListBtn = document.getElementById("viewList");
+const viewGridBtn = document.getElementById("viewGrid");
 
 const LS_SELECTED = "tvatt_selected_person_v7";
+const LS_VIEW = "tvatt_view_mode_v9"; // "grid" | "list"
+
 
 let people = [];
 let lastLogByPerson = new Map(); // person_id -> {done_at, done_by, step}
@@ -212,6 +216,22 @@ function renderGrid() {
   });
 }
 
+
+function applyViewMode(mode){
+  const m = (mode === "list") ? "list" : "grid";
+  document.body.classList.toggle("listMode", m === "list");
+
+  if (viewListBtn) viewListBtn.classList.toggle("active", m === "list");
+  if (viewGridBtn) viewGridBtn.classList.toggle("active", m === "grid");
+
+  localStorage.setItem(LS_VIEW, m);
+}
+
+function initViewMode(){
+  const saved = localStorage.getItem(LS_VIEW) || "grid";
+  applyViewMode(saved);
+}
+
 async function reload() {
   try {
     await Promise.all([fetchPeople(), fetchLastLogs()]);
@@ -231,6 +251,11 @@ selEl.addEventListener("change", () => {
 });
 
 refreshBtn.addEventListener("click", reload);
+
+if (viewListBtn) viewListBtn.addEventListener("click", () => applyViewMode("list"));
+if (viewGridBtn) viewGridBtn.addEventListener("click", () => applyViewMode("grid"));
+
+initViewMode();
 
 washBtn.addEventListener("click", async () => {
   const personId = selEl.value;

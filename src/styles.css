@@ -159,3 +159,33 @@ input{ width:100%; }
 .modalActions .btn{
   flex:1 1 140px;
 }
+
+
+/* View toggle buttons */
+.viewToggle{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.iconBtn{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  background: var(--chip);
+  border:3px solid var(--line);
+  border-radius:0;
+  cursor:pointer;
+  font-weight:900;
+  font-size:18px;
+  line-height:1;
+}
+.iconBtn.active{
+  background: var(--red);
+  color:#fff;
+}
+
+/* List mode: force 1 column even on desktop */
+body.listMode .grid{
+  grid-template-columns: 1fr;
+}
