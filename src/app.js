@@ -2,12 +2,14 @@ import { registerServiceWorker } from "./pwa.js";
 import { createSupabaseClient } from "./supabaseClient.js";
 const supabase = createSupabaseClient();
 
+registerServiceWorker();
+
 // Cykel: 1–4 VANLIGT, 5 IMPREGNERING
 const STEPS = [
-  { key: 1, label: "VANLIGT TVÄTTPROGRAM" },
-  { key: 2, label: "VANLIGT TVÄTTPROGRAM" },
-  { key: 3, label: "VANLIGT TVÄTTPROGRAM" },
-  { key: 4, label: "VANLIGT TVÄTTPROGRAM" },
+  { key: 1, label: "TVÄTTPROGRAM" },
+  { key: 2, label: "TVÄTTPROGRAM" },
+  { key: 3, label: "TVÄTTPROGRAM" },
+  { key: 4, label: "TVÄTTPROGRAM" },
   { key: 5, label: "IMPREGNERING" },
 ];
 
@@ -17,7 +19,7 @@ const instructionEl = document.getElementById("instruction");
 const refreshBtn = document.getElementById("refresh");
 const washBtn = document.getElementById("doNext");
 
-const LS_SELECTED = "tvatt_selected_person_v3";
+const LS_SELECTED = "tvatt_selected_person_v7";
 
 let people = [];
 let lastLogByPerson = new Map(); // person_id -> {done_at, done_by, step}
@@ -29,7 +31,6 @@ async function fetchPeople() {
 }
 
 async function fetchLastLogs() {
-  // Hämta senaste log per person (MVP: hämta senaste 500 totalt och plocka första per person)
   const { data, error } = await supabase
     .from("wash_log")
     .select("person_id,step,done_by,done_at")
@@ -84,6 +85,61 @@ function fmtDate(s) {
   try { return new Date(s).toLocaleString("sv-SE"); } catch { return "—"; }
 }
 
+function showConfirm({ title, body, yesText="JA", noText="NEJ" }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "modalOverlay";
+    overlay.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modalTitle">${escapeHtml(title)}</div>
+        <div class="modalBody">${escapeHtml(body)}</div>
+        <div class="modalActions">
+          <button class="btn primary" id="modalYes">${escapeHtml(yesText)}</button>
+          <button class="btn" id="modalNo">${escapeHtml(noText)}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    function cleanup(result){
+      overlay.remove();
+      resolve(result);
+    }
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) cleanup(false);
+    });
+    overlay.querySelector("#modalYes").addEventListener("click", () => cleanup(true));
+    overlay.querySelector("#modalNo").addEventListener("click", () => cleanup(false));
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[c]));
+}
+
+async function washPerson(personId) {
+  const person = people.find(p => p.id === personId);
+  if (!person) return;
+
+  const step = person.next_step;
+  const next = step === 5 ? 1 : step + 1;
+
+  const { error: lErr } = await supabase.from("wash_log").insert({
+    person_id: personId,
+    step,
+    done_by: personId
+  });
+  if (lErr) throw lErr;
+
+  const { error: uErr } = await supabase
+    .from("people")
+    .update({ next_step: next, updated_at: new Date().toISOString() })
+    .eq("id", personId);
+  if (uErr) throw uErr;
+}
+
 function renderGrid() {
   const selectedId = selEl.value;
   gridEl.innerHTML = "";
@@ -91,6 +147,7 @@ function renderGrid() {
   people.forEach(person => {
     const card = document.createElement("div");
     card.className = "card" + (person.id === selectedId ? " selected" : "");
+    card.dataset.personId = person.id;
 
     const last = lastLogByPerson.get(person.id);
     const lastText = last ? fmtDate(last.done_at) : "ALDRIG";
@@ -115,39 +172,41 @@ function renderGrid() {
       stack.appendChild(row);
     });
 
-    // Klick på kortet = välj det (snabbt på platta)
-    card.addEventListener("click", () => {
-      selEl.value = person.id;
-      localStorage.setItem(LS_SELECTED, person.id);
-      renderInstruction();
-      renderGrid();
+    card.appendChild(stack);
+
+    card.addEventListener("click", async () => {
+      const currentlySelected = selEl.value;
+
+      // 1st click: select
+      if (currentlySelected !== person.id) {
+        selEl.value = person.id;
+        localStorage.setItem(LS_SELECTED, person.id);
+        renderInstruction();
+        renderGrid();
+        return;
+      }
+
+      // 2nd click: confirm wash
+      card.classList.add("confirm");
+      const ok = await showConfirm({
+        title: "TVÄTTA?",
+        body: `TVÄTTA KORT ${person.id}?`
+      });
+      card.classList.remove("confirm");
+
+      if (ok) {
+        try {
+          await washPerson(person.id);
+        } catch (e) {
+          console.error(e);
+          instructionEl.textContent = "KUNDE INTE LOGGA TVÄTT. KONTROLLERA POLICIES/ANSLUTNING.";
+        }
+        await reload();
+      }
     });
 
-    card.appendChild(stack);
     gridEl.appendChild(card);
   });
-}
-
-async function washSelected() {
-  const personId = selEl.value;
-  const person = people.find(p => p.id === personId);
-  if (!person) return;
-
-  const step = person.next_step;
-  const next = step === 5 ? 1 : step + 1;
-
-  const { error: lErr } = await supabase.from("wash_log").insert({
-    person_id: personId,
-    step,
-    done_by: personId
-  });
-  if (lErr) throw lErr;
-
-  const { error: uErr } = await supabase
-    .from("people")
-    .update({ next_step: next, updated_at: new Date().toISOString() })
-    .eq("id", personId);
-  if (uErr) throw uErr;
 }
 
 async function reload() {
@@ -171,17 +230,16 @@ selEl.addEventListener("change", () => {
 refreshBtn.addEventListener("click", reload);
 
 washBtn.addEventListener("click", async () => {
+  const personId = selEl.value;
+  if (!personId) return;
+
   try {
-    await washSelected();
+    await washPerson(personId);
   } catch (e) {
     console.error(e);
     instructionEl.textContent = "KUNDE INTE LOGGA TVÄTT. KONTROLLERA POLICIES/ANSLUTNING.";
   }
-  registerServiceWorker();
-
-await reload();
+  await reload();
 });
-
-registerServiceWorker();
 
 await reload();
