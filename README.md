@@ -1,4 +1,4 @@
-# Tvättcykel-hanterare v7 (GitHub Pages + Supabase)
+# Tvättcykel-hanterare v8 (GitHub Pages + Supabase)
 
 Nyheter i v2
 - PIN-lås på brandkårssidan (kod **8310**)
@@ -44,15 +44,20 @@ Lägg repo i GitHub och aktivera Pages från branch.
 - `supabase/db.sql` – schema + startdata
 
 
-## v7
+## v8
 - Ny projektikon: stiliserad brandman (svart clipart/SVG)
 - Ikonen används som favicon och i övre vänstra hörnet
 
 
-## v7
+## v8
 - Ny projektikon (PNG): stiliserad brandman (svart clipart)
 
 
-## v7
+## v8
 - PWA-stöd (manifest + service worker) för installation på hemskärm
 - Fixad stavning: TVÄTTPROGRAM
+
+
+## v8
+- Haptisk feedback (vibration) vid markering och bekräftad tvätt
+- Uppdaterad hjälptext anpassad för mobil + desktop
