@@ -76,7 +76,7 @@ function renderInstruction() {
     <div><strong>VALT TVÄTTKORT:</strong> <span class="mono">${person.id}</span></div>
     <div style="margin-top:6px;"><strong>PROGRAM:</strong> ${stepLabel(person.next_step)}</div>
     <div class="redText" style="margin-top:8px;">
-      KÖR PROGRAM ENLIGT INRINGAT FÄLT. TRYCK SEN PÅ TVÄTTA-KNAPPEN.
+      KÖR PROGRAM ENLIGT TVÄTTKORTETS REKOMENDATION. KLICKA FÖR MARKERA KORT, KLICKA IGEN FÖR ATT BEKRÄFTA.
     </div>
   `;
 }
@@ -178,6 +178,7 @@ function renderGrid() {
       const currentlySelected = selEl.value;
 
       // 1st click: select
+      if (navigator.vibrate) navigator.vibrate(30);
       if (currentlySelected !== person.id) {
         selEl.value = person.id;
         localStorage.setItem(LS_SELECTED, person.id);
@@ -187,6 +188,7 @@ function renderGrid() {
       }
 
       // 2nd click: confirm wash
+      if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
       card.classList.add("confirm");
       const ok = await showConfirm({
         title: "TVÄTTA?",
@@ -195,6 +197,7 @@ function renderGrid() {
       card.classList.remove("confirm");
 
       if (ok) {
+        if (navigator.vibrate) navigator.vibrate(120);
         try {
           await washPerson(person.id);
         } catch (e) {
